@@ -239,6 +239,38 @@ void q_reverseK(struct list_head *head, int k)
     }
 }
 
+void q_merge_two(struct list_head *one, struct list_head *two, bool descend)
+{
+    
+     if (!one || !two)
+        return ;
+    
+    struct list_head head ;
+    INIT_LIST_HEAD(&head);
+    struct list_head *ptr = &head;
+
+    while (!list_empty(one) && !list_empty(two)){
+        element_t *oele = list_first_entry(one, element_t, list);
+        element_t *tele = list_first_entry(two, element_t, list);
+        if (descend){
+            if (strcmp(oele->value, tele->value)>=0)
+                list_move_tail(&oele->list, ptr);
+            else
+                list_move_tail(&tele->list, ptr);
+        }
+        else{
+            if (strcmp(oele->value, tele->value)<0)
+                list_move_tail(&oele->list, ptr);
+            else
+                list_move_tail(&tele->list, ptr);
+        }
+    }
+
+    list_splice_tail_init(one, ptr);
+    list_splice_tail_init(two, ptr);
+    list_splice(ptr, one);
+}
+
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend) 
 {
@@ -342,38 +374,4 @@ int q_merge(struct list_head *head, bool descend)
     return num;
 }
 
-int q_merge_two(struct list_head *one, struct list_head *two, bool descend)
-{
-    
-     if (!one || !two)
-        return 0;
-    
-    struct list_head head ;
-    INIT_LIST_HEAD(&head);
-    struct list_head *ptr = &head;
 
-    while (!list_empty(one) && !list_empty(two)){
-        element_t *oele = list_first_entry(one, element_t, list);
-        element_t *tele = list_first_entry(two, element_t, list);
-        if (descend){
-            if (strcmp(oele->value, tele->value)>=0)
-                list_move_tail(&oele->list, ptr);
-            else
-                list_move_tail(&tele->list, ptr);
-        }
-        else{
-            if (strcmp(oele->value, tele->value)<0)
-                list_move_tail(&oele->list, ptr);
-            else
-                list_move_tail(&tele->list, ptr);
-        }
-    }
-
-    list_splice_tail_init(one, ptr);
-    list_splice_tail_init(two, ptr);
-    list_splice(ptr, one);
-    
-    return 0;
-    
-    
-}
