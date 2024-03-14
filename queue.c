@@ -175,15 +175,64 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+    if (!head)
+        return;
+    struct list_head *node;
+    list_for_each (node, head) {
+        if (node->next == head)
+            break;
+        list_move(node, node->next);
+    }
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head) 
+{
+    struct list_head *cur = head;
+    struct list_head *pre = head->prev;
+    struct list_head *nex = head->next;
+  
+    while(nex!=pre)
+    {
+        cur->prev = nex;
+        cur->next = pre;
+        pre = cur;
+        cur = nex;
+        nex = nex->next;
+    }
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
+    struct list_head *cur = head;
+    struct list_head *seark = cur->next;
+    
+    struct list_head buf;
+    INIT_LIST_HEAD(&buf);
+    
+    int count = 1;
+       
+    while (seark!=head){
+        while (count!=k){
+            if (seark == head)
+                break;
+            seark = seark->next;
+            count ++;
+        }
+        if (seark == head)
+            break;
+        list_cut_position(&buf, cur, seark);
+        q_reverse(&buf);
+        seark = buf.prev;
+        list_splice(&buf,cur);
+        INIT_LIST_HEAD(&buf);
+   
+        cur = seark;
+        seark = seark->next;
+        count = 1;
+    }
 }
 
 /* Sort elements of queue in ascending/descending order */
