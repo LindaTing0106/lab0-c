@@ -274,7 +274,29 @@ void q_sort(struct list_head *head, bool descend) {}
 int q_ascend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    struct list_head *one = head;
+    bool del = 0;
+    while (one->next != head){
+        struct list_head *com = one->next;
+        element_t *oneele = list_entry(one->next, element_t, list);
+        while(com->next != head){
+            element_t *comele = list_entry(com->next, element_t, list);
+            if (strcmp(oneele->value, comele->value)>0){
+                list_del(one->next);
+                free(oneele->value);
+                free(oneele);
+                del = 1;
+                break;
+            }
+            com = com->next;
+        }
+        if (!del){
+            one = one->next;
+        }
+        else 
+            del = 0;
+    }
+    return q_size(head);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -282,7 +304,30 @@ int q_ascend(struct list_head *head)
 int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    struct list_head *one = head;
+    bool del = 0;
+    while (one->next != head){
+        struct list_head *com = one->next;
+        element_t *oneele = list_entry(one->next, element_t, list);
+        while(com->next != head){
+            element_t *comele = list_entry(com->next, element_t, list);
+            if (strcmp(oneele->value, comele->value)<0){
+                list_del(one->next);
+                free(oneele->value);
+                free(oneele);
+                del = 1;
+                break;
+            }
+            com = com->next;
+        }
+        if (!del){
+            one = one->next;
+        }
+        else 
+            del = 0;
+        
+    }
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
