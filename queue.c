@@ -76,12 +76,14 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
         return NULL;
     
     element_t *remove = list_first_entry(head, element_t, list);
-    if (strlen (remove->value)>bufsize){
-        strncpy(sp, remove->value,bufsize);
-        *(sp+bufsize-1) = '\0';
+    if (sp){
+        if (strlen (remove->value)>bufsize){
+            strncpy(sp, remove->value,bufsize-1);
+            *(sp+bufsize-1) = '\0';
+        }
+        else
+            strncpy(sp, remove->value,strlen (remove->value)+1);
     }
-    else
-        strncpy(sp, remove->value,strlen (remove->value)+1);
     list_del(&(remove->list));
     return remove;
 }
@@ -92,12 +94,14 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     if (!head || list_empty(head))
         return NULL;
     element_t *remove = list_last_entry(head, element_t, list);
-    if (strlen (remove->value)>bufsize){
-        strncpy(sp, remove->value,bufsize);
-        *(sp+bufsize-1) = '\0';
+    if (sp){
+        if (strlen (remove->value)>bufsize){
+            strncpy(sp, remove->value,bufsize);
+            *(sp+bufsize-1) = '\0';
+        }
+        else
+            strncpy(sp, remove->value,strlen (remove->value)+1);
     }
-    else
-        strncpy(sp, remove->value,strlen (remove->value)+1);
     list_del(&(remove->list));
     return remove;
 }
