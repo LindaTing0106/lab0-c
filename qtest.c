@@ -45,6 +45,7 @@ extern int show_entropy;
 #include "queue.h"
 
 #include "list_sort.h"
+#include "timsort.h"
 
 
 #include "console.h"
@@ -1176,6 +1177,57 @@ bool do_list_sort(int argc, char *argv[])
     return ok && !error_check();
 }
 
+bool do_timsort(int argc, char *argv[])
+{
+    int count;
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    int cnt = 0;
+    if (!current || !current->q)
+        report(3, "Warning: Calling sort on null queue");
+    else
+        cnt = q_size(current->q);
+    error_check();
+
+    if (cnt < 2)
+        report(3, "Warning: Calling sort on single node");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (current && exception_setup(true))
+        timsort(&count ,current->q, compare);
+    exception_cancel();
+    set_noallocate_mode(false);
+
+    bool ok = true;
+    if (current && current->size) {
+        for (struct list_head *cur_l = current->q->next;
+             cur_l != current->q && --cnt; cur_l = cur_l->next) {
+            /* Ensure each element in ascending/descending order */
+            element_t *item, *next_item;
+            item = list_entry(cur_l, element_t, list);
+            next_item = list_entry(cur_l->next, element_t, list);
+            if (!descend && strcmp(item->value, next_item->value) > 0) {
+                report(1, "ERROR: Not sorted in ascending order");
+                ok = false;
+                break;
+            }
+
+            if (descend && strcmp(item->value, next_item->value) < 0) {
+                report(1, "ERROR: Not sorted in descending order");
+                ok = false;
+                break;
+            }
+        }
+    }
+
+    q_show(3);
+    return ok && !error_check();
+}
+
 
 static void console_init()
 {
@@ -1217,8 +1269,9 @@ static void console_init()
                 "");
     ADD_COMMAND(reverseK, "Reverse the nodes of the queue 'K' at a time",
                 "[K]");
-    ADD_COMMAND(shuffle, "Implement Fisher–Yates shuffle algorithm", "");
+    ADD_COMMAND(shuffle, "shuffle", "");
     ADD_COMMAND(list_sort, "Sort queue in ascending/descening order refer to linux kernel", "");
+    ADD_COMMAND(timsort, "Sort queue in ascending/descening order refer to timsort", "");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
