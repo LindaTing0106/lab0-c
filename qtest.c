@@ -22,6 +22,7 @@
 #include "dudect/fixture.h"
 #include "list.h"
 #include "random.h"
+#include "ttt.c"
 
 /* Shannon entropy */
 extern double shannon_entropy(const uint8_t *input_data);
@@ -1227,7 +1228,11 @@ bool do_timsort(int argc, char *argv[])
     q_show(3);
     return ok && !error_check();
 }
-
+bool do_ttt(int argc, char *argv[])
+{
+    ttt();
+    return true;
+}
 
 static void console_init()
 {
@@ -1272,6 +1277,7 @@ static void console_init()
     ADD_COMMAND(shuffle, "shuffle", "");
     ADD_COMMAND(list_sort, "Sort queue in ascending/descening order refer to linux kernel", "");
     ADD_COMMAND(timsort, "Sort queue in ascending/descening order refer to timsort", "");
+    ADD_COMMAND(ttt, "Tic-Tac-Toe", "");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
