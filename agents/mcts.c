@@ -3,10 +3,22 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "game.h"
 #include "mcts.h"
 #include "util.h"
+
+
+#define FRACTIONAL_BITS 20
+
+float fixed_to_float(unsigned long fixed_value) {
+    return (float)fixed_value / (1 << FRACTIONAL_BITS);
+}
+
+unsigned long float_to_fixed(double value) {
+    return (unsigned long)(value * (1 << FRACTIONAL_BITS));
+}
 
 struct node {
     int move;
@@ -37,22 +49,68 @@ static void free_node(struct node *node)
     free(node);
 }
 
-static inline double uct_score(int n_total, int n_visits, double score)
+unsigned long fixed_sqrt(unsigned long x)
+{
+    if (x == 0UL)
+        return 0;
+    unsigned long guess = x >> 1;
+    unsigned long previous_guess;
+
+    unsigned long epsilon = 1;
+
+    do {
+        previous_guess = guess;
+        guess = (guess + (x << FRACTIONAL_BITS) / guess) >> 1;
+    } while (guess - previous_guess > epsilon);
+
+    return guess;
+}
+
+unsigned long fixed_taylor_series_log(unsigned long x) {
+    if (x == 0UL)
+        return 0;
+
+    unsigned long div = ((x + (1 << FRACTIONAL_BITS)));
+    unsigned long div2 = div  >> FRACTIONAL_BITS;
+     if (div2 == 0)
+        div2 = 1;
+    unsigned long u = (x - (1 << FRACTIONAL_BITS)) / div2;
+
+    unsigned long sum = 0;
+    unsigned long u_squared = u * u;
+    u_squared += 1UL << (FRACTIONAL_BITS - 1);
+    u_squared >>= FRACTIONAL_BITS;
+
+    for (int n = 0; n < 10; n++) {
+        unsigned long term = ((2 * u)) / (2 * n + 1);
+        sum += term;
+        u *= u_squared;
+        u >>= FRACTIONAL_BITS; 
+    }
+
+    return sum;
+}
+
+static inline unsigned long uct_score(int n_total, int n_visits, unsigned long score)
 {
     if (n_visits == 0)
-        return DBL_MAX;
-    return score / n_visits +
-           EXPLORATION_FACTOR * sqrt(log(n_total) / n_visits);
+        return ULONG_MAX;
+    unsigned long ret = score / n_visits +
+          ((fixed_sqrt(2 << FRACTIONAL_BITS) * fixed_sqrt(fixed_taylor_series_log(n_total << FRACTIONAL_BITS) / n_visits)) >> FRACTIONAL_BITS);
+
+    // double rett = score / n_visits +
+    //        sqrt(2) * sqrt(log(n_total) / n_visits);
+    return ret;
 }
 
 static struct node *select_move(struct node *node)
 {
     struct node *best_node = NULL;
-    double best_score = -1;
+    unsigned long best_score = 0UL;
     for (int i = 0; i < N_GRIDS; i++) {
         if (!node->children[i])
             continue;
-        double score = uct_score(node->n_visits, node->children[i]->n_visits,
+        unsigned long score = uct_score(node->n_visits, node->children[i]->n_visits,
                                  node->children[i]->score);
         if (score > best_score) {
             best_score = score;
@@ -62,7 +120,7 @@ static struct node *select_move(struct node *node)
     return best_node;
 }
 
-static double simulate(char *table, char player)
+static unsigned long simulate(char *table, char player)
 {
     char win;
     char current_player = player;
@@ -84,16 +142,16 @@ static double simulate(char *table, char player)
             return calculate_win_value(win, player);
         current_player ^= 'O' ^ 'X';
     }
-    return 0.5;
+    return 1 << (FRACTIONAL_BITS - 1);
 }
 
-static void backpropagate(struct node *node, double score)
+static void backpropagate(struct node *node, unsigned long score)
 {
     while (node) {
         node->n_visits++;
         node->score += score;
         node = node->parent;
-        score = 1 - score;
+        score = (1 << FRACTIONAL_BITS) - score;
     }
 }
 

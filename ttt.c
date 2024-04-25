@@ -8,6 +8,8 @@
 #include <string.h>
 #include <time.h>
 
+#define USE_MCTS
+
 #include "game.h"
 #ifdef USE_RL
 #include "agents/reinforcement_learning.h"

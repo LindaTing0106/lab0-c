@@ -6,6 +6,8 @@
 
 #include "game.h"
 
+#define FRACTIONAL_BITS 20
+
 #define LOOKUP(table, i, j, else_value)                         \
     ((i) < 0 || (j) < 0 || (i) > BOARD_SIZE || (j) > BOARD_SIZE \
          ? (else_value)                                         \
@@ -62,13 +64,13 @@ char check_win(char *t)
     return 'D';
 }
 
-double calculate_win_value(char win, char player)
+unsigned long calculate_win_value(char win, char player)
 {
     if (win == player)
-        return 1.0;
+        return 1 << FRACTIONAL_BITS;
     if (win == (player ^ 'O' ^ 'X'))
-        return 0.0;
-    return 0.5;
+        return 0;
+    return 1 << (FRACTIONAL_BITS - 1);
 }
 
 int *available_moves(char *table)
