@@ -22,7 +22,7 @@
 #include "dudect/fixture.h"
 #include "list.h"
 #include "random.h"
-#include "ttt.c"
+#include "coro.c"
 
 /* Shannon entropy */
 extern double shannon_entropy(const uint8_t *input_data);
@@ -79,6 +79,8 @@ static int fail_count = 0;
 static int string_length = MAXSTRING;
 
 static int descend = 0;
+
+static int aivsai = 0;
 
 #define MIN_RANDSTR_LEN 5
 #define MAX_RANDSTR_LEN 10
@@ -1230,7 +1232,11 @@ bool do_timsort(int argc, char *argv[])
 }
 bool do_ttt(int argc, char *argv[])
 {
-    ttt();
+    if (aivsai)
+        coro();
+    else 
+        ttt();
+
     return true;
 }
 
@@ -1286,6 +1292,8 @@ static void console_init()
               "Number of times allow queue operations to return false", NULL);
     add_param("descend", &descend,
               "Sort and merge queue in ascending/descending order", NULL);
+    add_param("AIvsAI", &aivsai,
+              "Choose the mode of tic-tac-toe", NULL);
 }
 
 /* Signal handlers */
